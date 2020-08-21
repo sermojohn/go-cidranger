@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	rnet "github.com/libp2p/go-cidranger/net"
+	"github.com/stretchr/testify/assert"
 )
 
 /*
