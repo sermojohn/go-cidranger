@@ -73,7 +73,7 @@ func TestPrefixTrieInsert(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			trie := newPrefixTree(tc.version).(*prefixTrie)
+			trie := newPrefixTree(tc.version)
 			for _, insert := range tc.inserts {
 				_, network, _ := net.ParseCIDR(insert)
 				err := trie.Insert(NewBasicRangerEntry(*network))
@@ -104,7 +104,7 @@ func TestPrefixTrieInsert(t *testing.T) {
 
 func TestPrefixTrieString(t *testing.T) {
 	inserts := []string{"192.168.0.1/24", "192.168.1.1/24", "192.168.1.1/30"}
-	trie := newPrefixTree(rnet.IPv4).(*prefixTrie)
+	trie := newPrefixTree(rnet.IPv4)
 	for _, insert := range inserts {
 		_, network, _ := net.ParseCIDR(insert)
 		trie.Insert(NewBasicRangerEntry(*network))
@@ -195,7 +195,7 @@ func TestPrefixTrieRemove(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			trie := newPrefixTree(tc.version).(*prefixTrie)
+			trie := newPrefixTree(tc.version)
 			for _, insert := range tc.inserts {
 				_, network, _ := net.ParseCIDR(insert)
 				err := trie.Insert(NewBasicRangerEntry(*network))
