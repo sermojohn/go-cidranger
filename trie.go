@@ -84,8 +84,7 @@ func newPathprefixTrie(network rnet.Network, numBitsSkipped uint) *prefixTrie {
 }
 
 func newEntryTrie(network rnet.Network, entry RangerEntry) *prefixTrie {
-	ones, _ := network.IPNet.Mask.Size()
-	leaf := newPathprefixTrie(network, uint(ones))
+	leaf := newPathprefixTrie(network, uint(network.Mask))
 	leaf.entry = entry
 	return leaf
 }
