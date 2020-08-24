@@ -2,14 +2,15 @@ package cidranger
 
 import (
 	"encoding/binary"
+	detectrace "github.com/ipfs/go-detect-race"
 	"math/rand"
 	"net"
 	"runtime"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	rnet "github.com/libp2p/go-cidranger/net"
+	"github.com/stretchr/testify/assert"
 )
 
 func getAllByVersion(version rnet.IPVersion) *net.IPNet {
@@ -486,6 +487,11 @@ func TestTrieMemUsage(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping memory test in `-short` mode")
 	}
+
+	if detectrace.WithRace() {
+		t.Skip("Skipping memory test in `-race` mode")
+	}
+
 	numIPs := 100000
 	runs := 10
 
