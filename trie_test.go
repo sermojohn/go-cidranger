@@ -2,6 +2,7 @@ package cidranger
 
 import (
 	"encoding/binary"
+	detectrace "github.com/ipfs/go-detect-race"
 	"math/rand"
 	"net"
 	"runtime"
@@ -486,6 +487,11 @@ func TestTrieMemUsage(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping memory test in `-short` mode")
 	}
+
+	if detectrace.WithRace() {
+		t.Skip("Skipping memory test in `-race` mode")
+	}
+
 	numIPs := 100000
 	runs := 10
 
