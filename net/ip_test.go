@@ -220,9 +220,11 @@ func TestNewNetwork(t *testing.T) {
 	_, ipNet, _ := net.ParseCIDR("192.128.0.0/24")
 	n := NewNetwork(*ipNet)
 
-	assert.Equal(t, *ipNet, n.IPNet)
+	newIPNet := n.IPNet()
+	assert.True(t, ipNet.IP.Equal(newIPNet.IP))
+	assert.Equal(t, ipNet.Mask, newIPNet.Mask)
 	assert.Equal(t, NetworkNumber{3229614080}, n.Number)
-	assert.Equal(t, NetworkNumberMask{math.MaxUint32 - uint32(math.MaxUint8)}, n.Mask)
+	assert.Equal(t, NetworkNumberMask(24), n.Mask)
 }
 
 func TestNetworkMasked(t *testing.T) {
@@ -245,7 +247,7 @@ func TestNetworkMasked(t *testing.T) {
 		_, expected, _ := net.ParseCIDR(testcase.maskedNetwork)
 		n1 := NewNetwork(*network)
 		e1 := NewNetwork(*expected)
-		assert.True(t, e1.String() == n1.Masked(testcase.mask).String())
+		assert.Equal(t, e1.String(), n1.Masked(testcase.mask).String())
 	}
 }
 
@@ -377,22 +379,19 @@ func TestMask(t *testing.T) {
 		mask   NetworkNumberMask
 		ip     NetworkNumber
 		masked NetworkNumber
-		err    error
 		name   string
 	}{
-		{NetworkNumberMask{math.MaxUint32}, NetworkNumber{math.MaxUint32}, NetworkNumber{math.MaxUint32}, nil, "nop IPv4 mask"},
-		{NetworkNumberMask{math.MaxUint32 - math.MaxUint16}, NetworkNumber{math.MaxUint16 + 1}, NetworkNumber{math.MaxUint16 + 1}, nil, "nop IPv4 mask"},
-		{NetworkNumberMask{math.MaxUint32 - math.MaxUint16}, NetworkNumber{math.MaxUint32}, NetworkNumber{math.MaxUint32 - math.MaxUint16}, nil, "IPv4 masked"},
-		{NetworkNumberMask{math.MaxUint32, 0, 0, 0}, NetworkNumber{math.MaxUint32, 0, 0, 0}, NetworkNumber{math.MaxUint32, 0, 0, 0}, nil, "nop IPv6 mask"},
-		{NetworkNumberMask{math.MaxUint32 - math.MaxUint16, 0, 0, 0}, NetworkNumber{math.MaxUint16 + 1, 0, 0, 0}, NetworkNumber{math.MaxUint16 + 1, 0, 0, 0}, nil, "nop IPv6 mask"},
-		{NetworkNumberMask{math.MaxUint32 - math.MaxUint16, 0, 0, 0}, NetworkNumber{math.MaxUint32, 0, 0, 0}, NetworkNumber{math.MaxUint32 - math.MaxUint16, 0, 0, 0}, nil, "IPv6 masked"},
-		{NetworkNumberMask{math.MaxUint32}, NetworkNumber{math.MaxUint32, 0}, nil, ErrVersionMismatch, "Version mismatch"},
+		{32, NetworkNumber{math.MaxUint32}, NetworkNumber{math.MaxUint32}, "nop IPv4 mask"},
+		{16, NetworkNumber{math.MaxUint16 + 1}, NetworkNumber{math.MaxUint16 + 1}, "nop IPv4 mask"},
+		{16, NetworkNumber{math.MaxUint32}, NetworkNumber{math.MaxUint32 - math.MaxUint16}, "IPv4 masked"},
+		{96, NetworkNumber{math.MaxUint32, 0, 0, 0}, NetworkNumber{math.MaxUint32, 0, 0, 0}, "nop IPv6 mask"},
+		{16, NetworkNumber{math.MaxUint16 + 1, 0, 0, 0}, NetworkNumber{math.MaxUint16 + 1, 0, 0, 0}, "nop IPv6 mask"},
+		{16, NetworkNumber{math.MaxUint32, 0, 0, 0}, NetworkNumber{math.MaxUint32 - math.MaxUint16, 0, 0, 0}, "IPv6 masked"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			masked, err := tc.mask.Mask(tc.ip)
-			assert.Equal(t, tc.masked, masked)
-			assert.Equal(t, tc.err, err)
+			masked := tc.mask.Mask(tc.ip)
+			assert.Equal(t, tc.masked, masked, tc.name)
 		})
 	}
 }

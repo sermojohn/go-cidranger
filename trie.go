@@ -35,7 +35,7 @@ import (
 // TODO: Implement level-compressed component of the LPC trie.
 type prefixTrie struct {
 	parent   *prefixTrie
-	children []*prefixTrie
+	children [2]*prefixTrie
 
 	numBitsSkipped uint
 	numBitsHandled uint
@@ -46,17 +46,29 @@ type prefixTrie struct {
 	size int // This is only maintained in the root trie.
 }
 
+var ip4ZeroCIDR, ip6ZeroCIDR net.IPNet
+
+func init() {
+	_, v4, _ := net.ParseCIDR("0.0.0.0/0")
+	_, v6, _ := net.ParseCIDR("0::0/0")
+	ip4ZeroCIDR = *v4
+	ip6ZeroCIDR = *v6
+}
+
+func newRanger(version rnet.IPVersion) Ranger {
+	return newPrefixTree(version)
+}
+
 // newPrefixTree creates a new prefixTrie.
-func newPrefixTree(version rnet.IPVersion) Ranger {
-	_, rootNet, _ := net.ParseCIDR("0.0.0.0/0")
+func newPrefixTree(version rnet.IPVersion) *prefixTrie {
+	rootNet := ip4ZeroCIDR
 	if version == rnet.IPv6 {
-		_, rootNet, _ = net.ParseCIDR("0::0/0")
+		rootNet = ip6ZeroCIDR
 	}
 	return &prefixTrie{
-		children:       make([]*prefixTrie, 2, 2),
 		numBitsSkipped: 0,
 		numBitsHandled: 1,
-		network:        rnet.NewNetwork(*rootNet),
+		network:        rnet.NewNetwork(rootNet),
 	}
 }
 
@@ -65,15 +77,14 @@ func newPathprefixTrie(network rnet.Network, numBitsSkipped uint) *prefixTrie {
 	if len(network.Number) == rnet.IPv6Uint32Count {
 		version = rnet.IPv6
 	}
-	path := newPrefixTree(version).(*prefixTrie)
+	path := newPrefixTree(version)
 	path.numBitsSkipped = numBitsSkipped
 	path.network = network.Masked(int(numBitsSkipped))
 	return path
 }
 
 func newEntryTrie(network rnet.Network, entry RangerEntry) *prefixTrie {
-	ones, _ := network.IPNet.Mask.Size()
-	leaf := newPathprefixTrie(network, uint(ones))
+	leaf := newPathprefixTrie(network, uint(network.Mask))
 	leaf.entry = entry
 	return leaf
 }

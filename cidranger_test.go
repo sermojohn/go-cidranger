@@ -107,10 +107,10 @@ func testCoversNetworksAgainstBase(t *testing.T, iterations int, netGen networkG
 
 	for i := 0; i < iterations; i++ {
 		network := netGen()
-		expected, err := baseRanger.CoveredNetworks(network.IPNet)
+		expected, err := baseRanger.CoveredNetworks(network.IPNet())
 		assert.NoError(t, err)
 		for _, ranger := range rangers {
-			actual, err := ranger.CoveredNetworks(network.IPNet)
+			actual, err := ranger.CoveredNetworks(network.IPNet())
 			assert.NoError(t, err)
 			assert.Equal(t, len(expected), len(actual))
 			for _, network := range actual {
