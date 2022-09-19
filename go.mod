@@ -1,4 +1,4 @@
-module github.com/libp2p/go-cidranger
+module github.com/sermojohn/go-cidranger
 
 go 1.18
 
